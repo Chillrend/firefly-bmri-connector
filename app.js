@@ -3,7 +3,10 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-const helmet = require('helmet')
+const session = require('express-session');
+const auth = require('./middleware/basic-auth');
+
+const dotenv = require('dotenv').config();
 
 const indexRouter = require('./routes/index');
 
@@ -14,11 +17,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 app.use(logger('dev'));
-app.use(helmet());
+
+app.use(session({
+  secret: process.env.SESSION_KEY,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {secure: process.env.APP_ENV === 'production'}
+}))
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(auth);
 
 app.use('/', indexRouter);
 
