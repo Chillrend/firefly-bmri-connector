@@ -6,11 +6,16 @@ const logger = require('morgan');
 const session = require('express-session');
 const auth = require('./middleware/basic-auth');
 
+const { initializeApp, cert } = require('firebase-admin/app');
+
 const dotenv = require('dotenv').config();
 
 const indexRouter = require('./routes/index');
+const serviceAccount = require("./secrets/firebase.json");
 
 const app = express();
+
+initializeApp({credential: cert(serviceAccount)});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
