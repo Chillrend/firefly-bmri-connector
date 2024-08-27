@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 
 const import_xls = require('../controllers/import-controllern')
+const sync_to_firefly = require('../controllers/sync-controllers')
 
 // Set up multer to store files in memory
 
@@ -15,5 +16,6 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/import-xls', upload.single("fileUpload"), import_xls);
+router.get('/sync', sync_to_firefly);
 
 module.exports = router;

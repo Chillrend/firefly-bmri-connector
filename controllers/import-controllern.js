@@ -17,11 +17,10 @@ const import_xls = async (req, res, next) => {
 
         // Prepare to store the parsed data
         let parsedData = [];
-
         // Iterate over rows and columns
         for (let i = 0; i < rows.length; i++) {
             const transactionArray = rows[i].values;
-
+            console.log(transactionArray)
             // Skip if transaction number is null
             if (transactionArray[1] == null) continue;
 
@@ -36,6 +35,7 @@ const import_xls = async (req, res, next) => {
                 await check_and_insert('bmri-tx', ''+parsedData[parsedData.length - 1].timestamp, parsedData[parsedData.length - 1])
 
             } else {
+                console.log(transactionArray)
                 const cleanRemarks = transactionArray[8].replace(/\n/g, ' ');
                 const values = {
                     transaction_number: transactionArray[1],
