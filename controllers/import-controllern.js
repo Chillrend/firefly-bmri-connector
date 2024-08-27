@@ -14,13 +14,13 @@ const import_xls = async (req, res, next) => {
 
         const lastRow = worksheet.lastRow;
         const rows = worksheet.getRows(18,worksheet.lastRow.number-18)
+        console.log(rows.values());
 
         // Prepare to store the parsed data
         let parsedData = [];
         // Iterate over rows and columns
         for (let i = 0; i < rows.length; i++) {
-            const transactionArray = rows[i].values;
-            console.log(transactionArray)
+            const transactionArray = normalizeArray(rows[i].values);
             // Skip if transaction number is null
             if (transactionArray[1] == null) continue;
 
@@ -30,12 +30,10 @@ const import_xls = async (req, res, next) => {
                 parsedData[parsedData.length - 1].time = ` ${transactionArray[5]}`;
                 const fullDateTime = `${parsedData[parsedData.length - 1].date}${parsedData[parsedData.length - 1].time}`;
                 parsedData[parsedData.length - 1].timestamp = convert_to_date(fullDateTime).getTime();
-                console.log(parsedData[parsedData.length-1].timestamp)
 
-                await check_and_insert('bmri-tx', ''+parsedData[parsedData.length - 1].timestamp, parsedData[parsedData.length - 1])
-
+                await check_and_insert('bmri-tx', `${parsedData[parsedData.length - 1].timestamp}-${parsedData[parsedData.length-1].transaction_number}`, parsedData[parsedData.length - 1])
+                console.log(`Pushed to firestore: ${parsedData[parsedData.length - 1].transaction_remarks}; ${parsedData[parsedData.length - 1].timestamp}-${parsedData[parsedData.length-1].transaction_number}`)
             } else {
-                console.log(transactionArray)
                 const cleanRemarks = transactionArray[8].replace(/\n/g, ' ');
                 const values = {
                     transaction_number: transactionArray[1],
@@ -72,6 +70,16 @@ const check_and_insert = async (collectionName, docId, data) => {
         console.log('Document inserted successfully!');
         return true;
     }
+}
+
+const normalizeArray = (arr) => {
+    return arr.map(item => {
+        if (typeof item === 'object' && item !== null && 'richText' in item) {
+            // Extract the text from the richText object
+            return item.richText.map(rt => rt.text).join('');
+        }
+        return item; // If it's not a richText object, return it as is
+    });
 }
 
 const convert_to_date = (date_string) => {
