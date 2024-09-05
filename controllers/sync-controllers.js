@@ -15,7 +15,6 @@ const sync_to_firefly = async (req, res, next) => {
                 continue;
             }
 
-
             // Determine the transaction type and amount
             let transactionType, amount;
             if (transaction.amount_incoming != null) {
@@ -31,12 +30,12 @@ const sync_to_firefly = async (req, res, next) => {
 
             const iso_date = convertTimestampToISO(transaction.timestamp);
             // Sync transaction to Firefly III
-            await syncTransaction(transactionType, iso_date, amount, transaction.transaction_remarks);
-
-            // // Update Firestore document to mark as synced
-            // await db.collection('your-transaction-collection').doc(transaction.id).update({
-            //     syncedToFirefly: true,
-            // });
+            const sync = await syncTransaction(transactionType, iso_date, amount, transaction.transaction_remarks);
+            if(sync){
+                await db.collection('bmri-tx').doc(transaction.id).update({
+                    syncedToFirefly: true,
+                });
+            }
         }
 
         res.status(200).send('Transactions synced successfully.');
